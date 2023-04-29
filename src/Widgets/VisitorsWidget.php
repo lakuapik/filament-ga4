@@ -1,18 +1,17 @@
 <?php
 
-namespace BezhanSalleh\FilamentGoogleAnalytics\Widgets;
+namespace Lakuapik\FilamentGA4\Widgets;
 
-use BezhanSalleh\FilamentGoogleAnalytics\FilamentGoogleAnalytics;
-use BezhanSalleh\FilamentGoogleAnalytics\Traits;
 use Filament\Widgets\Widget;
-use Illuminate\Support\Arr;
+use Lakuapik\FilamentGA4\FilamentGA4;
+use Lakuapik\FilamentGA4\Traits;
 
 class VisitorsWidget extends Widget
 {
     use Traits\Visitors;
     use Traits\CanViewWidget;
 
-    protected static string $view = 'filament-google-analytics::widgets.visitors-widget';
+    protected static string $view = 'filament-ga4::widgets.visitors-widget';
 
     protected static ?int $sort = 3;
 
@@ -20,61 +19,56 @@ class VisitorsWidget extends Widget
 
     public $readyToLoad = false;
 
-    public function init()
+    public function init(): void
     {
         $this->readyToLoad = true;
     }
 
     public function label(): ?string
     {
-        return __('filament-google-analytics::widgets.visitors');
+        return __('filament-ga4::widgets.visitors');
     }
 
     protected static function filters(): array
     {
         return [
-            'T' => __('filament-google-analytics::widgets.T'),
-            'Y' => __('filament-google-analytics::widgets.Y'),
-            'LW' => __('filament-google-analytics::widgets.LW'),
-            'LM' => __('filament-google-analytics::widgets.LM'),
-            'LSD' => __('filament-google-analytics::widgets.LSD'),
-            'LTD' => __('filament-google-analytics::widgets.LTD'),
+            'T' => __('filament-ga4::widgets.T'),
+            'Y' => __('filament-ga4::widgets.Y'),
+            'LW' => __('filament-ga4::widgets.LW'),
+            'LM' => __('filament-ga4::widgets.LM'),
+            'LSD' => __('filament-ga4::widgets.LSD'),
+            'LTD' => __('filament-ga4::widgets.LTD'),
         ];
     }
 
-    protected function initializeData()
+    protected function initializeData(): FilamentGA4
     {
         $lookups = [
-            'T' => $this->visitorsToday(),
-            'Y' => $this->visitorsYesterday(),
-            'LW' => $this->visitorsLastWeek(),
-            'LM' => $this->visitorsLastMonth(),
-            'LSD' => $this->visitorsLastSevenDays(),
-            'LTD' => $this->visitorsLastThirtyDays(),
+            'T' => fn () => $this->visitorsToday(),
+            'Y' => fn () => $this->visitorsYesterday(),
+            'LW' => fn () => $this->visitorsLastWeek(),
+            'LM' => fn () => $this->visitorsLastMonth(),
+            'LSD' => fn () => $this->visitorsLastSevenDays(),
+            'LTD' => fn () => $this->visitorsLastThirtyDays(),
         ];
 
-        $data = Arr::get(
-            $lookups,
-            $this->filter,
-            [
-                'result' => 0,
-                'previous' => 0,
-            ],
-        );
+        $data = rescue($lookups[$this->filter], ['result' => 0, 'previous' => 0]);
 
-        return FilamentGoogleAnalytics::for($data['result'])
-            ->previous($data['previous'])
-            ->format('%');
+        return FilamentGA4::for($data['result'])
+                     ->previous($data['previous'])
+                     ->format('%');
     }
 
     protected function getData(): array
     {
+        $data = $this->initializeData();
+
         return [
             'label' => $this->label(),
-            'value' => $this->initializeData()->trajectoryValue(),
-            'icon' => $this->initializeData()->trajectoryIcon(),
-            'color' => $this->initializeData()->trajectoryColor(),
-            'description' => $this->initializeData()->trajectoryDescription(),
+            'value' => $data->trajectoryValue(),
+            'icon' => $data->trajectoryIcon(),
+            'color' => $data->trajectoryColor(),
+            'description' => $data->trajectoryDescription(),
             'chart' => '',
             'chartColor' => '',
         ];
@@ -83,8 +77,8 @@ class VisitorsWidget extends Widget
     protected function getViewData(): array
     {
         return [
-            'data' => $this->readyToLoad ? $this->getData() : [],
             'filters' => static::filters(),
+            'data' => $this->readyToLoad ? $this->getData() : [],
         ];
     }
 }

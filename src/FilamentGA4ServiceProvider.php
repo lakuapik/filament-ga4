@@ -1,23 +1,22 @@
 <?php
 
-namespace BezhanSalleh\FilamentGoogleAnalytics;
+namespace Lakuapik\FilamentGA4;
 
 use Filament\PluginServiceProvider;
 use Spatie\LaravelPackageTools\Package;
 
-class FilamentGoogleAnalyticsServiceProvider extends PluginServiceProvider
+class FilamentGA4ServiceProvider extends PluginServiceProvider
 {
     protected array $pages = [
-        Pages\FilamentGoogleAnalyticsDashboard::class,
+        Pages\FilamentGA4Dashboard::class,
     ];
 
     protected array $widgets = [
         Widgets\PageViewsWidget::class,
         Widgets\VisitorsWidget::class,
-        Widgets\ActiveUsersOneDayWidget::class,
-        Widgets\ActiveUsersSevenDayWidget::class,
-        Widgets\ActiveUsersFourteenDayWidget::class,
-        Widgets\ActiveUsersTwentyEightDayWidget::class,
+        Widgets\ActiveUsers1DayWidget::class,
+        Widgets\ActiveUsers7DayWidget::class,
+        Widgets\ActiveUsers28DayWidget::class,
         Widgets\SessionsWidget::class,
         Widgets\SessionsDurationWidget::class,
         Widgets\SessionsByCountryWidget::class,
@@ -29,7 +28,7 @@ class FilamentGoogleAnalyticsServiceProvider extends PluginServiceProvider
     public function configurePackage(Package $package): void
     {
         $package
-            ->name('filament-google-analytics')
+            ->name('filament-ga4')
             ->hasConfigFile()
             ->hasViews()
             ->hasTranslations();

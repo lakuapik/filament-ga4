@@ -1,79 +1,81 @@
 <?php
 
-namespace BezhanSalleh\FilamentGoogleAnalytics\Traits;
+namespace Lakuapik\FilamentGA4\Traits;
 
-use Carbon\Carbon;
+use Spatie\Analytics\Facades\Analytics;
+use Spatie\Analytics\OrderBy;
 use Spatie\Analytics\Period;
 
 trait Sessions
 {
-    use MetricDiff;
+    use PeriodsTable;
+
+    private function getSessions(
+        Period $currentPeriod,
+        Period $previousPeriod,
+        string $dimension = 'date',
+    ): array {
+        $currentResults = Analytics::get(
+            $currentPeriod,
+            ['sessions'],
+            [$dimension],
+            100,
+            [OrderBy::dimension($dimension, true)]
+        );
+
+        $previousResults = Analytics::get(
+            $previousPeriod,
+            ['sessions'],
+            [$dimension],
+            100,
+            [OrderBy::dimension($dimension, true)]
+        );
+
+        return [
+            'previous' => $previousResults->pluck('sessions')->sum() ?? 0,
+            'result' => $currentResults->pluck('sessions')->sum() ?? 0,
+        ];
+    }
 
     private function sessionsToday(): array
     {
-        $results = $this->performQuery('ga:sessions', 'ga:date', Period::days(1));
+        $periods = $this->getPeriodsToday();
 
-        return [
-            'previous' => $results->first()['value'] ?? 0,
-            'result' => $results->last()['value'] ?? 0,
-        ];
+        return $this->getSessions($periods['current'], $periods['previous'], 'date');
     }
 
     private function sessionsYesterday(): array
     {
-        $results = $this->performQuery('ga:sessions', 'ga:date', Period::create(Carbon::yesterday()->clone()->subDay(), Carbon::yesterday()));
+        $periods = $this->getPeriodsYesterday();
 
-        return [
-            'previous' => $results->first()['value'] ?? 0,
-            'result' => $results->last()['value'] ?? 0,
-        ];
+        return $this->getSessions($periods['current'], $periods['previous'], 'date');
     }
 
     private function sessionsLastWeek(): array
     {
-        $lastWeek = $this->getLastWeek();
-        $currentResults = $this->performQuery('ga:sessions', 'ga:year', $lastWeek['current']);
-        $previousResults = $this->performQuery('ga:sessions', 'ga:year', $lastWeek['previous']);
+        $periods = $this->getPeriodsLastWeek();
 
-        return [
-            'previous' => $previousResults->pluck('value')[0] ?? 0,
-            'result' => $currentResults->pluck('value')[0] ?? 0,
-        ];
+        return $this->getSessions($periods['current'], $periods['previous'], 'year');
     }
 
     private function sessionsLastMonth(): array
     {
-        $lastMonth = $this->getLastMonth();
-        $currentResults = $this->performQuery('ga:sessions', 'ga:year', $lastMonth['current']);
-        $previousResults = $this->performQuery('ga:sessions', 'ga:year', $lastMonth['previous']);
+        $periods = $this->getPeriodsLastMonth();
 
-        return [
-            'previous' => $previousResults->pluck('value')[0] ?? 0,
-            'result' => $currentResults->pluck('value')[0] ?? 0,
-        ];
+        return $this->getSessions($periods['current'], $periods['previous'], 'year');
     }
 
     private function sessionsLastSevenDays(): array
     {
-        $lastSevenDays = $this->getLastSevenDays();
-        $currentResults = $this->performQuery('ga:sessions', 'ga:year', $lastSevenDays['current']);
-        $previousResults = $this->performQuery('ga:sessions', 'ga:year', $lastSevenDays['previous']);
+        $periods = $this->getPeriodsLastSevenDays();
 
-        return [
-            'previous' => $previousResults->pluck('value')[0] ?? 0,
-            'result' => $currentResults->pluck('value')[0] ?? 0,
-        ];
+        return $this->getSessions($periods['current'], $periods['previous'], 'year');
     }
 
     private function sessionsLastThirtyDays(): array
     {
-        $lastThirtyDays = $this->getLastThirtyDays();
-        $currentResults = $this->performQuery('ga:sessions', 'ga:year', $lastThirtyDays['current']);
-        $previousResults = $this->performQuery('ga:sessions', 'ga:year', $lastThirtyDays['previous']);
+        $periods = $this->getPeriodsLastThirtyDays();
 
-        return [
-            'previous' => $previousResults->pluck('value')[0] ?? 0,
-            'result' => $currentResults->pluck('value')[0] ?? 0,
-        ];
+        return $this->getSessions($periods['current'], $periods['previous'], 'year');
     }
 }

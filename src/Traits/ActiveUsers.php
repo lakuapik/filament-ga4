@@ -1,31 +1,29 @@
 <?php
 
-namespace BezhanSalleh\FilamentGoogleAnalytics\Traits;
+namespace Lakuapik\FilamentGA4\Traits;
 
-use Carbon\Carbon;
-use Spatie\Analytics\Analytics;
+use Spatie\Analytics\Facades\Analytics;
+use Spatie\Analytics\OrderBy;
 use Spatie\Analytics\Period;
 
 trait ActiveUsers
 {
-    private function performActiveUsersQuery(string $metric, int $days): array
+    private function getActiveUsers(string $metric, int $days): array
     {
-        $analyticsData = app(Analytics::class)
-            ->performQuery(
-                Period::days($days),
-                $metric,
-                [
-                    'metrics' => $metric,
-                    'dimensions' => 'ga:date',
-                ]
-            );
+        $data = Analytics::get(
+            Period::days($days),
+            [$metric],
+            ['date'],
+            100,
+            [OrderBy::dimension('date', true)]
+        );
 
-        $results = collect($analyticsData->getRows())->mapWithKeys(function ($row) {
-            return [
-                (new Carbon($row[0]))->format('M j') => intval($row[1]),
-            ];
-        });
+        $results = [];
 
-        return ['results' => $results->toArray()];
+        foreach ($data as $row) {
+            $results[$row['date']->format('M j')] = $row[$metric];
+        }
+
+        return ['results' => $results];
     }
 }

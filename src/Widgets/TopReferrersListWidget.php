@@ -1,17 +1,18 @@
 <?php
 
-namespace BezhanSalleh\FilamentGoogleAnalytics\Widgets;
+namespace Lakuapik\FilamentGA4\Widgets;
 
-use BezhanSalleh\FilamentGoogleAnalytics\Traits;
 use Filament\Widgets\Widget;
-use Spatie\Analytics\Analytics;
+use Lakuapik\FilamentGA4\Traits;
+use Spatie\Analytics\Facades\Analytics;
+use Spatie\Analytics\OrderBy;
 use Spatie\Analytics\Period;
 
 class TopReferrersListWidget extends Widget
 {
     use Traits\CanViewWidget;
 
-    protected static string $view = 'filament-google-analytics::widgets.top-referrers-list-widget';
+    protected static string $view = 'filament-ga4::widgets.top-referrers-list-widget';
 
     protected static ?int $sort = 3;
 
@@ -19,25 +20,27 @@ class TopReferrersListWidget extends Widget
 
     public bool $readyToLoad = false;
 
-    public function init()
+    public function init(): void
     {
         $this->readyToLoad = true;
     }
 
     protected function getHeading(): ?string
     {
-        return __('filament-google-analytics::widgets.top_referrers');
+        return __('filament-ga4::widgets.top_referrers');
     }
 
-    protected function getViewData(): array
+    protected static function filters(): array
     {
         return [
-            'data' => $this->readyToLoad ? $this->getData() : [],
-            'filters' => static::filters(),
+            'T' => __('filament-ga4::widgets.T'),
+            'TW' => __('filament-ga4::widgets.TW'),
+            'TM' => __('filament-ga4::widgets.TM'),
+            'TY' => __('filament-ga4::widgets.TY'),
         ];
     }
 
-    protected function getData()
+    protected function getData(): array
     {
         $lookups = [
             'T' => Period::days(1),
@@ -46,32 +49,27 @@ class TopReferrersListWidget extends Widget
             'TY' => Period::years(1),
         ];
 
-        $analyticsData = app(Analytics::class)
-            ->performQuery(
-                $lookups[$this->filter],
-                'ga:users',
-                [
-                    'dimensions' => 'ga:fullReferrer',
-                    'sort' => '-ga:users',
-                    'max-results' => 10,
-                ]
-            );
+        $results = rescue(fn () => Analytics::get(
+            @$lookups[$this->filter] ?? $lookups['T'],
+            ['totalUsers'],
+            ['pageReferrer'],
+            10,
+            [OrderBy::dimension('totalUsers', true)]
+        ), collect());
 
-        return collect($analyticsData['rows'] ?? [])->map(function (array $pageRow) {
-            return [
-                'url' => $pageRow[0],
-                'pageViews' => (int) $pageRow[1],
-            ];
-        });
+        return $results
+            ->map(fn ($row) => [
+                'url' => $row['pageReferrer'] ?: '(unknown)',
+                'pageViews' => $row['totalUsers'],
+            ])
+            ->toArray();
     }
 
-    protected static function filters(): array
+    protected function getViewData(): array
     {
         return [
-            'T' => __('filament-google-analytics::widgets.T'),
-            'TW' => __('filament-google-analytics::widgets.TW'),
-            'TM' => __('filament-google-analytics::widgets.TM'),
-            'TY' => __('filament-google-analytics::widgets.TY'),
+            'filters' => static::filters(),
+            'data' => $this->readyToLoad ? $this->getData() : [],
         ];
     }
 }

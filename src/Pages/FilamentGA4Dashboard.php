@@ -1,13 +1,13 @@
 <?php
 
-namespace BezhanSalleh\FilamentGoogleAnalytics\Pages;
+namespace Lakuapik\FilamentGA4\Pages;
 
-use BezhanSalleh\FilamentGoogleAnalytics\Widgets;
 use Filament\Pages\Page;
+use Lakuapik\FilamentGA4\Widgets;
 
-class FilamentGoogleAnalyticsDashboard extends Page
+class FilamentGA4Dashboard extends Page
 {
-    protected static string $view = 'filament-google-analytics::pages.google-analytics-dashboard';
+    protected static string $view = 'filament-ga4::pages.ga4-dashboard';
 
     public function mount()
     {
@@ -18,22 +18,22 @@ class FilamentGoogleAnalyticsDashboard extends Page
 
     protected static function getNavigationIcon(): string
     {
-        return config('filament-google-analytics.dashboard_icon') ?? 'heroicon-o-chart-bar';
+        return config('filament-ga4.dashboard_icon') ?? 'heroicon-o-chart-bar';
     }
 
     protected static function getNavigationLabel(): string
     {
-        return __('filament-google-analytics::widgets.navigation_label');
+        return __('filament-ga4::widgets.navigation_label');
     }
 
     protected function getTitle(): string
     {
-        return __('filament-google-analytics::widgets.title');
+        return __('filament-ga4::widgets.title');
     }
 
     public static function canView(): bool
     {
-        return config('filament-google-analytics.dedicated_dashboard');
+        return config('filament-ga4.dedicated_dashboard');
     }
 
     protected static function shouldRegisterNavigation(): bool
@@ -46,10 +46,9 @@ class FilamentGoogleAnalyticsDashboard extends Page
         return [
             Widgets\PageViewsWidget::class,
             Widgets\VisitorsWidget::class,
-            Widgets\ActiveUsersOneDayWidget::class,
-            Widgets\ActiveUsersSevenDayWidget::class,
-            Widgets\ActiveUsersFourteenDayWidget::class,
-            Widgets\ActiveUsersTwentyEightDayWidget::class,
+            Widgets\ActiveUsers1DayWidget::class,
+            Widgets\ActiveUsers7DayWidget::class,
+            // Widgets\ActiveUsers28DayWidget::class,
             Widgets\SessionsWidget::class,
             Widgets\SessionsDurationWidget::class,
             Widgets\SessionsByCountryWidget::class,

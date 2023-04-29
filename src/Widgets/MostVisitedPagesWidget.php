@@ -1,17 +1,18 @@
 <?php
 
-namespace BezhanSalleh\FilamentGoogleAnalytics\Widgets;
+namespace Lakuapik\FilamentGA4\Widgets;
 
-use BezhanSalleh\FilamentGoogleAnalytics\Traits;
 use Filament\Widgets\Widget;
-use Spatie\Analytics\Analytics;
+use Lakuapik\FilamentGA4\Traits;
+use Spatie\Analytics\Facades\Analytics;
+use Spatie\Analytics\OrderBy;
 use Spatie\Analytics\Period;
 
 class MostVisitedPagesWidget extends Widget
 {
     use Traits\CanViewWidget;
 
-    protected static string $view = 'filament-google-analytics::widgets.most-visited-pages-widget';
+    protected static string $view = 'filament-ga4::widgets.most-visited-pages-widget';
 
     protected static ?int $sort = 3;
 
@@ -19,25 +20,27 @@ class MostVisitedPagesWidget extends Widget
 
     public bool $readyToLoad = false;
 
-    public function init()
+    public function init(): void
     {
         $this->readyToLoad = true;
     }
 
     protected function getHeading(): ?string
     {
-        return __('filament-google-analytics::widgets.most_visited_pages');
+        return __('filament-ga4::widgets.most_visited_pages');
     }
 
-    protected function getViewData(): array
+    protected static function filters(): array
     {
         return [
-            'data' => $this->readyToLoad ? $this->getData() : [],
-            'filters' => $this->getFilters(),
+            'T' => __('filament-ga4::widgets.T'),
+            'TW' => __('filament-ga4::widgets.TW'),
+            'TM' => __('filament-ga4::widgets.TM'),
+            'TY' => __('filament-ga4::widgets.TY'),
         ];
     }
 
-    protected function getData()
+    protected function getData(): array
     {
         $lookups = [
             'T' => Period::days(1),
@@ -46,39 +49,29 @@ class MostVisitedPagesWidget extends Widget
             'TY' => Period::years(1),
         ];
 
-        $analyticsData = app(Analytics::class)->performQuery(
-            $lookups[$this->filter],
-            'ga:users',
-            [
-                'metrics' => 'ga:pageviews',
-                'dimensions' => 'ga:pageTitle,ga:hostname,ga:pagePath',
-                'sort' => '-ga:pageviews',
-                'max-results' => 10,
-            ]
-        );
+        $results = rescue(fn () => Analytics::get(
+            @$lookups[$this->filter] ?? $lookups['T'],
+            ['screenPageViews'],
+            ['pageTitle', 'hostname', 'pagePath'],
+            10,
+            [OrderBy::metric('screenPageViews', true)]
+        ), collect());
 
-        $headers = [
-            'name',
-            'hostname',
-            'path',
-            'visits',
-        ];
-
-        return array_map(
-            function ($row) use ($headers) {
-                return array_combine($headers, $row);
-            },
-            $analyticsData->rows ?? []
-        );
+        return $results
+            ->map(fn ($row) => [
+                'name' => $row['pageTitle'],
+                'hostname' => $row['hostname'],
+                'path' => $row['pagePath'],
+                'visits' => $row['screenPageViews'],
+            ])
+            ->toArray();
     }
 
-    public function getFilters(): array
+    protected function getViewData(): array
     {
         return [
-            'T' => __('filament-google-analytics::widgets.T'),
-            'TW' => __('filament-google-analytics::widgets.TW'),
-            'TM' => __('filament-google-analytics::widgets.TM'),
-            'TY' => __('filament-google-analytics::widgets.TY'),
+            'data' => $this->readyToLoad ? $this->getData() : [],
+            'filters' => static::filters(),
         ];
     }
 }

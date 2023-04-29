@@ -1,18 +1,20 @@
 <?php
 
-namespace BezhanSalleh\FilamentGoogleAnalytics\Widgets;
+namespace Lakuapik\FilamentGA4\Widgets;
 
-use BezhanSalleh\FilamentGoogleAnalytics\Traits;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Str;
-use Spatie\Analytics\Analytics;
-use Spatie\Analytics\Period;
+use Lakuapik\FilamentGA4\FilamentGA4;
+use Lakuapik\FilamentGA4\Traits;
+use Spatie\Analytics\Facades\Analytics;
+use Spatie\Analytics\OrderBy;
 
 class SessionsByDeviceWidget extends Widget
 {
+    use Traits\PeriodsTable;
     use Traits\CanViewWidget;
 
-    protected static string $view = 'filament-google-analytics::widgets.sessions-by-device-widget';
+    protected static string $view = 'filament-ga4::widgets.sessions-by-device-widget';
 
     protected static ?int $sort = 3;
 
@@ -20,33 +22,33 @@ class SessionsByDeviceWidget extends Widget
 
     public bool $readyToLoad = false;
 
-    public function init()
+    public function init(): void
     {
         $this->readyToLoad = true;
     }
 
     protected function label(): ?string
     {
-        return __('filament-google-analytics::widgets.sessions_by_device');
+        return __('filament-ga4::widgets.sessions_by_device');
     }
 
-    protected function getChartData()
+    protected function getChartData(): array
     {
-        $analyticsData = app(Analytics::class)->performQuery(
-            Period::months(1),
-            'ga:sessions',
-            [
-                'metrics' => 'ga:sessions',
-                'dimensions' => 'ga:deviceCategory',
-            ]
+        $data = Analytics::get(
+            $this->getPeriodsLastThirtyDays()['current'],
+            ['sessions'],
+            ['deviceCategory'],
+            10,
+            [OrderBy::metric('sessions', true)],
         );
 
         $results = [];
-        foreach (collect($analyticsData->getRows()) as $row) {
-            $results[Str::studly($row[0])] = $row[1];
+
+        foreach (collect($data) as $row) {
+            $results[Str::headline($row['deviceCategory'])] = $row['sessions'];
         }
 
-        $this->total = number_format($analyticsData->totalsForAllResults['ga:sessions']);
+        $this->total = FilamentGA4::thousandsFormater($data->sum('sessions'));
 
         return [
             'labels' => array_keys($results),
@@ -55,12 +57,12 @@ class SessionsByDeviceWidget extends Widget
                     'label' => 'Device',
                     'data' => array_map('intval', array_values($results)),
                     'backgroundColor' => [
-                        '#008FFB', '#00E396', '#feb019', '#ff455f', '#775dd0', '#80effe',
+                        '#008FFB', '#00E396', '#feb019',
+                        '#ff455f', '#775dd0', '#80effe',
                     ],
                     'cutout' => '75%',
                     'hoverOffset' => 7,
                     'borderColor' => config('filament.dark_mode') ? 'transparent' : '#fff',
-
                 ],
             ],
         ];

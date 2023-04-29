@@ -1,5 +1,6 @@
 The MIT License (MIT)
 
+Copyright (c) David Adi Nugroho <d@davids.id>
 Copyright (c) bezhanSalleh <bezhan_salleh@yahoo.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

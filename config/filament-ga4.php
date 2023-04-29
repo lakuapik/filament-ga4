@@ -20,22 +20,17 @@ return [
         'global' => true,
     ],
 
-    'active_users_one_day' => [
+    'active_users1_day' => [
         'filament_dashboard' => false,
         'global' => true,
     ],
 
-    'active_users_seven_day' => [
+    'active_users7_day' => [
         'filament_dashboard' => false,
         'global' => true,
     ],
 
-    'active_users_fourteen_day' => [
-        'filament_dashboard' => false,
-        'global' => true,
-    ],
-
-    'active_users_twenty_eight_day' => [
+    'active_users28_day' => [
         'filament_dashboard' => false,
         'global' => true,
     ],
